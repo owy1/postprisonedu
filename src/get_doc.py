@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import json
 import argparse
 import urllib
-from urllib.parse import quote
+from six.moves.urllib.parse import quote
 
 
 # DOC Web site
