@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import json
 import argparse
 import urllib
+from six.moves.urllib.parse import quote
+
 
 # DOC Web site
 _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
@@ -20,9 +22,9 @@ def get_doc(docid):
     # First request to get ASP.net state info
     r = requests.get(_BaseUrl)
     soup = BeautifulSoup(r.text,'html.parser')
-    viewstate = urllib.quote(soup.select("#__VIEWSTATE")[0]['value'],safe='')
-    eventvalidation = urllib.quote(soup.select("#__EVENTVALIDATION")[0]['value'],safe='')
-    vsg = urllib.quote(soup.select("#__VIEWSTATEGENERATOR")[0]['value'],safe='')
+    viewstate = quote(soup.select("#__VIEWSTATE")[0]['value'],safe='')
+    eventvalidation = quote(soup.select("#__EVENTVALIDATION")[0]['value'],safe='')
+    vsg = quote(soup.select("#__VIEWSTATEGENERATOR")[0]['value'],safe='')
     payload = _PostArgs % (viewstate,vsg,eventvalidation,docid)
 
     # Now post and retrieve results
