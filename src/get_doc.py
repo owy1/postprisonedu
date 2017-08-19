@@ -4,7 +4,6 @@ import os
 from bs4 import BeautifulSoup
 import json
 import argparse
-import urllib
 from six.moves.urllib.parse import quote
 from simple_salesforce import Salesforce
 import json
@@ -26,6 +25,7 @@ def get_login():
     security_token = os.environ.get('security_token')
     sf = Salesforce(username=username, password=password, security_token=security_token)
     return sf
+
 def debug(o,indent=4):
     '''
     Pretty print SalesForce objects
@@ -36,7 +36,7 @@ def debug(o,indent=4):
 
 def get_doc_info(sfrecords):
     '''
-    Request information from DOC Web site based on inmate's DOC number obtained from SalesForce.
+    Request information from DOC Web site based on inmate's DOC number obtained from SalesForce
     and add to SalesForce record. New fields are DOCLocation (which institution the inmate is 
     incarcerated in and DOCName, the name of the inmate as registered by the DOC
     :param sfrecords:
@@ -55,7 +55,7 @@ def get_doc_info(sfrecords):
         docid = record['CorrectionsAgencyNum__c']
         record['DOCLocation'] = None
         if docid is None:
-            log.warn("No DOC id available for %s" % record.get('Name'))
+            log.warn("No DOC id available for %s in SalesForce Contact info" % record.get('Name'))
             continue
         payload = _PostArgs % (viewstate, vsg, eventvalidation, docid)
         r = requests.post(_BaseUrl,data=payload,headers={'Content-type':'application/x-www-form-urlencoded'})
