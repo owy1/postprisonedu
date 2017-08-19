@@ -9,6 +9,7 @@ from six.moves.urllib.parse import quote
 from simple_salesforce import Salesforce
 import pytz
 import datetime
+import json
 
 # DOC Web site
 _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
@@ -46,29 +47,28 @@ def get_doc(docid):
     rval = [dict(zip(tds[i:i+8:2],tds[i+1:i+9:2])) for i in range(len(tds)) if i%8 == 0]
     return rval
 
+def debug(o,indent=4):
+    '''
+    Pretty print SalesForce objects
+    :param o: 
+    :return: None
+    '''
+    print(json.dumps(o,indent=indent))
 
-def get_id():
-    """."""
-    end = datetime.datetime.now(pytz.UTC)
-    temp = sf.Contact.updated(end - datetime.timedelta(days=10), end)
-    # with open('student_sqlid.json', 'w') as outfile:
-    #     json.dump(key, outfile)
-    dicts = {}
-    for key in temp['ids']:
-        d = sf.Contact.get(key)
-        dicts[key] = d['CorrectionsAgencyNum__c']
-    return list(dicts.values())
 
+def get_sf_ids():
+    #debug(sf.Contact.describe())
+    #raise Exception
+    docids = []
+    for record in sf.query_all("SELECT LastName,FirstName,Name,CorrectionsAgencyNum__c from Contact where LastName='Jones' limit 1")['records']:
+        debug(record)
+        docids.append(int(record['CorrectionsAgencyNum__c']))
+    return docids
 
 if __name__ == '__main__':
     sf = get_login()
-    # d = sf.Contact.get('003i000004XugvCAAR')
-    temp = get_id()
-    # print(json.dumps(get_doc(temp['0031Y00004k26xMQAQ'])))
-    print(json.dumps(get_doc(temp[0])))
-    """
-    [{"DOC Number": "701398", "Offender Name": "JONES, ERIC T", "Location": "Larch Corrections Center", "SAVIN Notification": "Register to be notified"}]
-    """
+    temp = get_sf_ids()
+    debug(get_doc(temp[0]))
    # parser = argparse.ArgumentParser(description='Get DOC info on an inmate')
    # parser.add_argument('docid', type=str, nargs=1, help='DOC id or name(for example, 118603)')
    # FLAGS, unparsed = parser.parse_known_args()
