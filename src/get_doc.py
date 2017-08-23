@@ -84,11 +84,15 @@ def get_sf_ids(lastname=None, limit=None):
     for record in sf.query_all(sqlquery)['records']:
         docid = record.get('CorrectionsAgencyNum__c')
         if docid is not None:
-            record['CorrectionsAgencyNum__c'] = int(docid)
+            try:
+                record['CorrectionsAgencyNum__c'] = int(docid)
+            except ValueError:
+                log.warn("Invalid DOC id for %s %s" % (record.get('Name'),docid))
+
         del record['attributes']
         docids.append(record)
     return docids
 
 if __name__ == '__main__':
     sf = get_login()
-    debug(get_doc_info(get_sf_ids(lastname='Jones', limit=5)))
+    debug(get_doc_info(get_sf_ids(lastname='Jones',limit=10)))
