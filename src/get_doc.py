@@ -19,26 +19,35 @@ _PostArgs='__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1=S
 class PostPrisonSF(object):
     def __init__(self,username=None, password=None, security_token=None):
         self.sf = Salesforce(username=username, password=password, security_token=security_token)
+        self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c')
 
-    def query(self,lastname=None, limit=None):
+    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True):
         """
         Get contact info from PostPrison db.
         :param lastname: Lastname of contact in SF db. If None, all lastnames
         :param limit: Maximum number of objects to return. If None, no limit
+        :param fields: Contact fields to return. Use '*' to return all fields
+        :param update_with_corrections: Update records with incarceration info.
         :return: List of SF objects matching query
         """
         sf = self.sf
-        sqlquery = "SELECT Id,LastName,FirstName,Name,CorrectionsAgencyNum__c,DOCAgencyNumType__c,LastActivityDate from Contact "
+        if fields is None:
+            fields = ','.join(self._default_fields)
+        elif fields == '*':
+            fields = [d['name'] for d in sf.Contact.describe()['fields']]
+            fields = ','.join(fields)
+
+        sqlquery = "SELECT %s from Contact" % fields
         if lastname is not None:
             sqlquery += " where LastName='%s' " % lastname
         if limit is not None:
             sqlquery += " limit %d" % limit
+        log.debug("Sqlquery is %s" % sqlquery)
 
         records = []
         unsupportedDocTypes = set()
         bad = 0
         for record in sf.query_all(sqlquery)['records']:
-            # debug(record)
             docid = record.get('CorrectionsAgencyNum__c')
             if docid is not None:
                 try:
@@ -57,6 +66,8 @@ class PostPrisonSF(object):
 
         log.debug("Unsupported doc types=%s" % unsupportedDocTypes)
         log.info("Fail/good %d/%d" % (bad, len(records)))
+        if not update_with_corrections:
+            return records
         return self._get_doc_info(records)
 
     def _get_doc_info(self, sfrecords):
@@ -94,49 +105,27 @@ class PostPrisonSF(object):
         return info
 
 
-def debug(o,indent=4):
+def debug(ob, indent=4, sort=True, remove_null=True):
     '''
     Pretty print SalesForce objects
-    :param o: 
+    :param ob: 
     :return: None
     '''
-    print(json.dumps(o,indent=indent))
-
-
-# def get_sf_by_id(id):
-#     return sf.Contact.get(id)
-
+    if remove_null:
+        ob = [dict((k,v) for di in ob for k,v in di.items() if v is not None)]
+    print(json.dumps(ob, indent=indent, sort_keys=sort))
 
 if __name__ == '__main__':
+    '''
+    debug(pp.query(lastname='Jones',fields='*', limit=1))  # Return one record with lastname Jones containing all fields
+    debug(pp.query(lastname='Chertok'))  # Return all record with lastname Chertok containing default fields
+    debug(pp.query(lastname='Bride', update_with_corrections=False))  # Return all record with lastname Bride containing default fields.
+                                                                      # Don't query DOC database
+    
+    '''
     username = os.environ.get('username')
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    debug(pp.query(lastname='Jones',limit=10))
-    #get_sf_ids()
-    #debug(get_doc_info(get_sf_ids(limit=500)))
-    #debug(get_doc_info(get_sf_ids(lastname='Jones',limit=10)))
-    #debug(get_doc_info(get_sf_ids()))
-
-    # Roseen Redstar
-    #d = get_sf_by_id("003i000000hFVF8AAO")
-
-    #d = get_doc_info(get_sf_ids(lastname='Bride'))
-    #debug(d)
-    #d = get_sf_by_id('003i000004gnLL7AAM')
-
-    # d = get_doc_info(get_sf_ids(lastname='Chertok'))
-    # debug(d)
-    # d = get_sf_by_id('003i000000gDakgAAC')
-    #
-    # for k in sorted(d.keys()):
-    #     v = d[k]
-    #     if v is not None and not k.endswith('__c'):
-    #         print(k,':',v)
-    # print()
-    # for k in sorted(d.keys()):
-    #     v = d[k]
-    #     if v is not None and k.endswith('__c'):
-    #         print(k,':',v)
-    #
+    debug(pp.query(lastname='Jones',limit=1))
 
