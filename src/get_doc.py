@@ -20,7 +20,7 @@ class PostPrisonSF(object):
     def __init__(self,username=None, password=None, security_token=None):
         self.sf = Salesforce(username=username, password=password, security_token=security_token)
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
-                                'Level_of_Service_singleApp__c','Application_Level_of_Service__c')
+                                'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate')
 
     def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1):
         """
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
     #debug(pp.query(lastname='Jones',limit=5))
-    query = pp.query(update_with_corrections=False, min_level_of_service=3)
-    debug(query, remove_null=False)
+    query = pp.query(min_level_of_service=3)
+    debug(query, remove_null=True)
     print(len(query))
 
