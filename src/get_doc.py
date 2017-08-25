@@ -20,7 +20,9 @@ class PostPrisonSF(object):
     def __init__(self,username=None, password=None, security_token=None):
         self.sf = Salesforce(username=username, password=password, security_token=security_token)
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
-                                'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate')
+                                'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
+                                'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
+                                'Risk_Level__c','Application_Service_Date__c','Application_ERD__c' )
 
     def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1):
         """
