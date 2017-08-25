@@ -19,27 +19,30 @@ _PostArgs='__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1=S
 class PostPrisonSF(object):
     def __init__(self,username=None, password=None, security_token=None):
         self.sf = Salesforce(username=username, password=password, security_token=security_token)
-        self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c')
+        self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
+                                'Level_of_Service_singleApp__c','Application_Level_of_Service__c')
 
-    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True):
+    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1):
         """
         Get contact info from PostPrison db.
         :param lastname: Lastname of contact in SF db. If None, all lastnames
         :param limit: Maximum number of objects to return. If None, no limit
         :param fields: Contact fields to return. Use '*' to return all fields
         :param update_with_corrections: Update records with incarceration info.
+        :param min_level_of_service: Minimum PostPrison level of service to include
         :return: List of SF objects matching query
         """
         sf = self.sf
+        self.min_level_of_service = min_level_of_service
         if fields is None:
             fields = ','.join(self._default_fields)
         elif fields == '*':
             fields = [d['name'] for d in sf.Contact.describe()['fields']]
             fields = ','.join(fields)
 
-        sqlquery = "SELECT %s from Contact" % fields
+        sqlquery = "SELECT %s from Contact where Application_Level_of_Service__c != null" % fields
         if lastname is not None:
-            sqlquery += " where LastName='%s' " % lastname
+            sqlquery += " and LastName='%s' " % lastname
         if limit is not None:
             sqlquery += " limit %d" % limit
         log.debug("Sqlquery is %s" % sqlquery)
@@ -47,7 +50,7 @@ class PostPrisonSF(object):
         records = []
         unsupportedDocTypes = set()
         bad = 0
-        for record in sf.query_all(sqlquery)['records']:
+        for record in self._filter(sf.query_all(sqlquery)['records']):
             docid = record.get('CorrectionsAgencyNum__c')
             if docid is not None:
                 try:
@@ -69,6 +72,26 @@ class PostPrisonSF(object):
         if not update_with_corrections:
             return records
         return self._get_doc_info(records)
+
+    def _filter(self,records):
+        '''
+        Extra filtering that can't be done with SOQL
+        :param: Input records
+        :return: Filtered records
+        '''
+        if self.min_level_of_service is not None:
+            field = 'Level_of_Service_singleApp__c'
+            def filter_dict(di):
+                for k,v in di.items():
+                    if k == field:
+                        if v is not None and v.isdigit():
+                            di[k] = int(v)
+                        else:
+                            di[k] = None
+                return di
+            records = [filter_dict(di) for di in records]
+            records = [di for di in records if di[field] >= self.min_level_of_service]
+        return records
 
     def _get_doc_info(self, sfrecords):
         '''
@@ -105,7 +128,7 @@ class PostPrisonSF(object):
         return info
 
 
-def debug(ob, indent=4, sort=True, remove_null=True):
+def debug(ob, indent=4, sort=True, remove_null=False):
     '''
     Pretty print SalesForce objects
     :param ob: 
@@ -127,5 +150,8 @@ if __name__ == '__main__':
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    debug(pp.query(lastname='Jones',limit=5))
+    #debug(pp.query(lastname='Jones',limit=5))
+    query = pp.query(update_with_corrections=False, min_level_of_service=3)
+    debug(query, remove_null=False)
+    print(len(query))
 
