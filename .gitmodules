@@ -1,0 +1,3 @@
+[submodule "src/simple-salesforce.git"]
+	path = src/simple-salesforce.git
+	url = https://github.com/simple-salesforce/simple-salesforce.git
