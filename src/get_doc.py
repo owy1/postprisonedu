@@ -112,7 +112,7 @@ def debug(ob, indent=4, sort=True, remove_null=True):
     :return: None
     '''
     if remove_null:
-        ob = [dict((k,v) for di in ob for k,v in di.items() if v is not None)]
+        ob = [{k:v for k,v in di.items() if v is not None} for di in ob]
     print(json.dumps(ob, indent=indent, sort_keys=sort))
 
 if __name__ == '__main__':
@@ -127,5 +127,5 @@ if __name__ == '__main__':
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    debug(pp.query(lastname='Jones',limit=1))
+    debug(pp.query(lastname='Jones',limit=5))
 
