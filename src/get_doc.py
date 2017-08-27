@@ -17,8 +17,12 @@ _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
 _PostArgs='__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1=Submit&TextBox1=%s'
 
 class PostPrisonSF(object):
-    def __init__(self,username=None, password=None, security_token=None):
-        self.sf = Salesforce(username=username, password=password, security_token=security_token)
+    def __init__(self,username=None, password=None, security_token=None,sandbox=False, sandboxname=None):
+        if sandbox:
+            if not sandboxname:
+                raise ValueError("Must specify a sandboxname if sandbox requested")
+            username += "." + sandboxname
+        self.sf = Salesforce(username=username, password=password, security_token=security_token,sandbox=sandbox)
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
                                 'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
                                 'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     username = os.environ.get('username')
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
-    pp = PostPrisonSF(username=username, password=password, security_token=security_token)
+    pp = PostPrisonSF(username=username, password=password, security_token=security_token, sandbox=True, sandboxname='opheliapp')
     #debug(pp.query(lastname='Jones',limit=5))
     query = pp.query(min_level_of_service=3)
     debug(query, remove_null=True)
