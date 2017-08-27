@@ -31,7 +31,7 @@ class PostPrisonSF(object):
                                 'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
                                 'Risk_Level__c','Application_Service_Date__c','Application_ERD__c' )
 
-    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1):
+    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1,debug_level=0):
         """
         Get contact info from PostPrison db.
         :param lastname: Lastname of contact in SF db. If None, all lastnames
@@ -49,9 +49,14 @@ class PostPrisonSF(object):
             fields = [d['name'] for d in sf.Contact.describe()['fields']]
             fields = ','.join(fields)
 
-        sqlquery = "SELECT %s from Contact where Application_Level_of_Service__c != null" % fields
+        where_clause = []
+        if min_level_of_service is not None:
+            where_clause = ['Application_Level_of_Service__c != null']
         if lastname is not None:
-            sqlquery += " and LastName='%s' " % lastname
+            where_clause.append("LastName='%s'" % lastname)
+        sqlquery = "SELECT %s from Contact" % fields
+        if len(where_clause) > 0:
+            sqlquery += " where " + ' and '.join(where_clause)
         if limit is not None:
             sqlquery += " limit %d" % limit
         log.debug("Sqlquery is %s" % sqlquery)
@@ -60,6 +65,8 @@ class PostPrisonSF(object):
         unsupportedDocTypes = set()
         bad = 0
         for record in self._filter(sf.query_all(sqlquery)['records']):
+            if debug_level > 0:
+                log.debug("Record was %s" % json.dumps(record, indent=4))
             docid = record.get('CorrectionsAgencyNum__c')
             if docid is not None:
                 try:
@@ -161,8 +168,9 @@ if __name__ == '__main__':
     pp = PostPrisonSF(username=username, password=password, security_token=security_token, sandboxname='opheliapp')
     # #debug(pp.query(lastname='Jones',limit=5))
     if False:
-        query = pp.query(update_with_corrections=False)
+        query = pp.query(update_with_corrections=False, min_level_of_service=None, debug_level=1)
         debug(query, remove_null=True)
         print(len(query))
     else:
-        util.bulk_load(pp, 'Contact', '../data/dump/Contact.csv')
+        #util.bulk_delete_all(pp)
+        util.bulk_load(pp, '../data/dump/Contact.csv')
