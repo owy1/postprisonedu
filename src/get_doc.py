@@ -10,6 +10,8 @@ import json
 import logging as log
 log.basicConfig(level=log.DEBUG)
 from collections import OrderedDict
+import util
+
 # DOC Web site
 _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
 
@@ -23,6 +25,7 @@ class PostPrisonSF(object):
             username += "." + sandboxname
             sandbox = True
         self.sf = Salesforce(username=username, password=password, security_token=security_token,sandbox=sandbox)
+        self.sandboxname = sandboxname
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
                                 'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
                                 'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
@@ -156,8 +159,10 @@ if __name__ == '__main__':
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token, sandboxname='opheliapp')
-    #debug(pp.query(lastname='Jones',limit=5))
-    query = pp.query(min_level_of_service=3)
-    debug(query, remove_null=True)
-    print(len(query))
-
+    # #debug(pp.query(lastname='Jones',limit=5))
+    if False:
+        query = pp.query(update_with_corrections=False)
+        debug(query, remove_null=True)
+        print(len(query))
+    else:
+        util.bulk_load(pp, 'Contact', '../data/dump/Contact.csv')
