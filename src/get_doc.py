@@ -17,7 +17,7 @@ _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
 _PostArgs='__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1=Submit&TextBox1=%s'
 
 class PostPrisonSF(object):
-    def __init__(self,username=None, password=None, security_token=None):
+    def __init__(self,username=None, password=None, security_token=None, sandbox=True):
         self.sf = Salesforce(username=username, password=password, security_token=security_token)
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
                                 'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
@@ -94,7 +94,7 @@ class PostPrisonSF(object):
             records = [filter_dict(di) for di in records]
             records = [di for di in records if di[field] >= self.min_level_of_service]
         return records
-
+    # build another get_doc
     def _get_doc_info(self, sfrecords):
         '''
         Request information from DOC Web site based on inmate's DOC number obtained from SalesForce
@@ -149,6 +149,8 @@ if __name__ == '__main__':
     
     '''
     username = os.environ.get('username')
+    username += '.opheliapp'
+    print(username)
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
