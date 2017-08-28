@@ -19,6 +19,7 @@ _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
 _PostArgs='__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1=Submit&TextBox1=%s'
 
 class PostPrisonSF(object):
+<<<<<<< HEAD
     def __init__(self,username=None, password=None, security_token=None,sandboxname=None):
         sandbox = False
         if sandboxname is not None:
@@ -26,6 +27,10 @@ class PostPrisonSF(object):
             sandbox = True
         self.sf = Salesforce(username=username, password=password, security_token=security_token,sandbox=sandbox)
         self.sandboxname = sandboxname
+=======
+    def __init__(self,username=None, password=None, security_token=None):
+        self.sf = Salesforce(username=username, password=password, security_token=security_token, sandbox=True)
+>>>>>>> ad103d2df0a3abd77cdfec1714d9ac7f3e626f05
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
                                 'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
                                 'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
@@ -108,7 +113,7 @@ class PostPrisonSF(object):
             records = [filter_dict(di) for di in records]
             records = [di for di in records if di[field] >= self.min_level_of_service]
         return records
-
+    # build another get_doc
     def _get_doc_info(self, sfrecords):
         '''
         Request information from DOC Web site based on inmate's DOC number obtained from SalesForce
@@ -163,14 +168,13 @@ if __name__ == '__main__':
     
     '''
     username = os.environ.get('username')
+    username += '.opheliapp'
+    print(username)
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
-    pp = PostPrisonSF(username=username, password=password, security_token=security_token, sandboxname='opheliapp')
-    # #debug(pp.query(lastname='Jones',limit=5))
-    if False:
-        query = pp.query(update_with_corrections=False, min_level_of_service=None, debug_level=1)
-        debug(query, remove_null=True)
-        print(len(query))
-    else:
-        #util.bulk_delete_all(pp)
-        util.bulk_load(pp, '../data/dump/Contact.csv')
+    pp = PostPrisonSF(username=username, password=password, security_token=security_token)
+    # debug(pp.query(lastname='Jones',limit=5))
+    query = pp.query(min_level_of_service=3)
+    debug(query, remove_null=True)
+    print(len(query))
+
