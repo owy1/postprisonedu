@@ -10,7 +10,6 @@ import json
 import logging as log
 log.basicConfig(level=log.DEBUG)
 from collections import OrderedDict
-import util
 
 # DOC Web site
 _BaseUrl='http://www.doc.wa.gov/information/inmate-search/default.aspx'
