@@ -9,12 +9,8 @@ from six.moves.urllib.parse import quote
 from simple_salesforce import Salesforce
 import logging as log
 log.basicConfig(level=log.DEBUG)
-<<<<<<< HEAD
-# from collections import OrderedDict
-=======
 from collections import OrderedDict
 
->>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
 # DOC Web site
 _BaseUrl = 'http://www.doc.wa.gov/information/inmate-search/default.aspx'
 
@@ -25,29 +21,17 @@ _PostArgs = '__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1
 
 
 class PostPrisonSF(object):
-<<<<<<< HEAD
     """."""
 
-    def __init__(self, username=None, password=None, security_token=None):
+    def __init__(self,username=None, password=None, security_token=None):
         """."""
         self.sf = Salesforce(username=username, password=password, security_token=security_token, sandbox=True)
-        self._default_fields = ('Id', 'LastName', 'FirstName', 'Name', 'CorrectionsAgencyNum__c', 'DOCAgencyNumType__c',
-                                'Level_of_Service_singleApp__c', 'Application_Level_of_Service__c', 'LastModifiedDate',
-                                'Index_Date_Selfreported__c', 'LastActivityDate', 'Last_Index_Date_DOCreported__c', 'CreatedDate',
-                                'Risk_Level__c', 'Application_Service_Date__c', 'Application_ERD__c')
-
-    def query(self, lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1):
-=======
-
-    def __init__(self,username=None, password=None, security_token=None):
-        self.sf = Salesforce(username=username, password=password, security_token=security_token)
         self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
                                 'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
                                 'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
                                 'Risk_Level__c','Application_Service_Date__c','Application_ERD__c' )
 
     def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1,debug_level=0):
->>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
         """
         Get contact info from PostPrison db.
 
@@ -128,12 +112,10 @@ class PostPrisonSF(object):
             records = [di for di in records if di[field] >= self.min_level_of_service]
         return records
 
-<<<<<<< HEAD
-=======
+
     def describe(self):
         debug(self.sf.Contact.describe())
 
->>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
     def _get_doc_info(self, sfrecords):
         """
         Request information from DOC Web site based on inmate's DOC number obtained from SalesForce.
@@ -171,7 +153,7 @@ class PostPrisonSF(object):
 
     def _get_doc_bop(self, sfrecords):
         """
-        Federal inmates.
+        Federal inmates work in progress.
         """
         # First request to get ASP.net state info
         session = requests.Session()
@@ -221,21 +203,13 @@ if __name__ == '__main__':
 
     """
     username = os.environ.get('username')
-<<<<<<< HEAD
     username += '.opheliapp'
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    debug(pp._get_doc_bop(lastname='Stevens',limit=5))
-    # query = pp.query(min_level_of_service=3)
-    # debug(query, remove_null=True)
-    # print(len(query))
-=======
-    password = os.environ.get('password')
-    security_token = os.environ.get('security_token')
-    pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    debug(pp.query(lastname='Orr', limit=10))  # Return one record with lastname Jones containing all fields
+    debug(pp._get_doc_bop()) #work in progress
+    # debug(pp.query(lastname='Orr', limit=10))  # Return one record with lastname Jones containing all fields
     #query = pp.query(update_with_corrections=True, min_level_of_service=3, limit=50)
-   # debug(query)
+    # debug(query)
 
->>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
+
