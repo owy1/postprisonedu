@@ -9,7 +9,12 @@ from six.moves.urllib.parse import quote
 from simple_salesforce import Salesforce
 import logging as log
 log.basicConfig(level=log.DEBUG)
+<<<<<<< HEAD
 # from collections import OrderedDict
+=======
+from collections import OrderedDict
+
+>>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
 # DOC Web site
 _BaseUrl = 'http://www.doc.wa.gov/information/inmate-search/default.aspx'
 
@@ -20,6 +25,7 @@ _PostArgs = '__VIEWSTATE=%s&__VIEWSTATEGENERATOR=%s&__EVENTVALIDATION=%s&Button1
 
 
 class PostPrisonSF(object):
+<<<<<<< HEAD
     """."""
 
     def __init__(self, username=None, password=None, security_token=None):
@@ -31,6 +37,17 @@ class PostPrisonSF(object):
                                 'Risk_Level__c', 'Application_Service_Date__c', 'Application_ERD__c')
 
     def query(self, lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1):
+=======
+
+    def __init__(self,username=None, password=None, security_token=None):
+        self.sf = Salesforce(username=username, password=password, security_token=security_token)
+        self._default_fields = ('Id','LastName','FirstName','Name','CorrectionsAgencyNum__c','DOCAgencyNumType__c',
+                                'Level_of_Service_singleApp__c','Application_Level_of_Service__c','LastModifiedDate',
+                                'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
+                                'Risk_Level__c','Application_Service_Date__c','Application_ERD__c' )
+
+    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1,debug_level=0):
+>>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
         """
         Get contact info from PostPrison db.
 
@@ -49,9 +66,14 @@ class PostPrisonSF(object):
             fields = [d['name'] for d in sf.Contact.describe()['fields']]
             fields = ','.join(fields)
 
-        sqlquery = "SELECT %s from Contact where Application_Level_of_Service__c != null" % fields
+        where_clause = []
+        if min_level_of_service is not None:
+            where_clause = ['Application_Level_of_Service__c != null']
         if lastname is not None:
-            sqlquery += " and LastName='%s' " % lastname
+            where_clause.append("LastName='%s'" % lastname)
+        sqlquery = "SELECT %s from Contact" % fields
+        if len(where_clause) > 0:
+            sqlquery += " where " + ' and '.join(where_clause)
         if limit is not None:
             sqlquery += " limit %d" % limit
         log.debug("Sqlquery is %s" % sqlquery)
@@ -60,6 +82,8 @@ class PostPrisonSF(object):
         unsupportedDocTypes = set()
         bad = 0
         for record in self._filter(sf.query_all(sqlquery)['records']):
+            if debug_level > 0:
+                log.debug("Record was %s" % json.dumps(record, indent=4))
             docid = record.get('CorrectionsAgencyNum__c')
             if docid is not None:
                 try:
@@ -104,6 +128,12 @@ class PostPrisonSF(object):
             records = [di for di in records if di[field] >= self.min_level_of_service]
         return records
 
+<<<<<<< HEAD
+=======
+    def describe(self):
+        debug(self.sf.Contact.describe())
+
+>>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
     def _get_doc_info(self, sfrecords):
         """
         Request information from DOC Web site based on inmate's DOC number obtained from SalesForce.
@@ -191,6 +221,7 @@ if __name__ == '__main__':
 
     """
     username = os.environ.get('username')
+<<<<<<< HEAD
     username += '.opheliapp'
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
@@ -199,3 +230,12 @@ if __name__ == '__main__':
     # query = pp.query(min_level_of_service=3)
     # debug(query, remove_null=True)
     # print(len(query))
+=======
+    password = os.environ.get('password')
+    security_token = os.environ.get('security_token')
+    pp = PostPrisonSF(username=username, password=password, security_token=security_token)
+    debug(pp.query(lastname='Orr', limit=10))  # Return one record with lastname Jones containing all fields
+    #query = pp.query(update_with_corrections=True, min_level_of_service=3, limit=50)
+   # debug(query)
+
+>>>>>>> afe12bbc2950d6709081f4dabb18cdfb147ddc2d
