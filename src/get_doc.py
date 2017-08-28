@@ -109,6 +109,9 @@ class PostPrisonSF(object):
             records = [di for di in records if di[field] >= self.min_level_of_service]
         return records
 
+    def describe(self):
+        debug(self.sf.Contact.describe())
+
     def _get_doc_info(self, sfrecords):
         '''
         Request information from DOC Web site based on inmate's DOC number obtained from SalesForce
@@ -165,12 +168,9 @@ if __name__ == '__main__':
     username = os.environ.get('username')
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
-    pp = PostPrisonSF(username=username, password=password, security_token=security_token, sandboxname='opheliapp')
-    # #debug(pp.query(lastname='Jones',limit=5))
-    if False:
-        query = pp.query(update_with_corrections=False, min_level_of_service=None, debug_level=1)
-        debug(query, remove_null=True)
-        print(len(query))
-    else:
-        #util.bulk_delete_all(pp)
-        util.bulk_load(pp, '../data/dump/Contact.csv')
+    assert(username.startswith('sir'))
+    pp = PostPrisonSF(username=username, password=password, security_token=security_token)
+    debug(pp.query(lastname='Orr', limit=10))  # Return one record with lastname Jones containing all fields
+    #query = pp.query(update_with_corrections=True, min_level_of_service=3, limit=50)
+   # debug(query)
+
