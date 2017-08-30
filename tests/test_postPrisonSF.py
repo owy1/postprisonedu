@@ -15,9 +15,11 @@ class TestPostPrisonSF(TestCase):
 
         self.pp = PostPrisonSF(username=username, password=password, security_token=security_token)
 
-    def testpp(self):
+    def testupdate(self):
         records = self.pp.query(lastname='Orr', limit=10) # Return one record with lastname Jones containing all fields
         self.assertIsNotNone(records)
         self.assertEquals(records[0]['FirstName'],'Frederick Del')
         self.assertEquals(records[0]['CorrectionsAgencyNum__c'],718288)
+
+        self.pp.update(records)
 

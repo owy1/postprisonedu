@@ -1,20 +1,8 @@
 import pandas as pd
 import os
-from get_doc import PostPrisonSF
+from get_doc import PostPrisonSF,debug
 
-def bulk_delete_all(pp):
-    assert(pp.sandboxname)
-    sf = pp.sf
-    sqlquery = "Select Id from Contact"
-    ids = [record['Id'] for record in sf.query_all(sqlquery)['records']]
-    print(len(ids))
-    ids = ['0030x000001EEk7AAG']
-    for id in ids:
-        pp.sf.Contact.delete(id)
-
-# 'CorrectionsAgencyNum__c','DOCAgencyNumType__c','Level_of_Service_singleApp__c'
-
-def bulk_load(pp, csv_file,delete=False):
+def bulk_load_contact(pp, csv_file,delete=False):
     dates = ["Index_Date_Selfreported__c","Last_Index_Date_DOCreported__c",'Application_ERD__c', 'Birthdate','SystemModstamp','CreatedDate', 'LastModifiedDate', 'LastActivityDate', 'LastCURequestDate', 'LastCUUpdateDate', 'EmailBouncedDate', 'npo02__FirstCloseDate__c', 'npo02__LastCloseDate__c', 'npo02__LastMembershipDate__c', 'npo02__MembershipEndDate__c', 'npo02__MembershipJoinDate__c', 'Index_Date_Selfreported__c', 'REMOVE_Recidivism_Date__c', 'Last_Index_Date_DOCreported__c', 'Application_Service_Date__c', 'Adjusted_S_Code_Date__c', 'Adjusted_Risk_Level_Date__c']
     bad = [u'LastModifiedDate', u'CreatedById', u'MasterRecordId', u'IsDeleted', u'CreatedDate', u'LastCUUpdateDate', u'LastCURequestDate', u'SystemModstamp', u'LastActivityDate',u'LastModifiedById', u'JigsawContactId']
     df = pd.read_csv(csv_file)
@@ -63,11 +51,26 @@ def bulk_load(pp, csv_file,delete=False):
             bulk = []
     if len(bulk) > 0: pp.sf.bulk.Contact.insert(bulk)
 
+def bulk_retrieve_metadata(pp,objects,output_dir):
+    for o in objects:
+        debug(pp.describe(o))
+
+
 if __name__ == '__main__':
+    # username = os.environ.get('prodsf_username')
+    # password = os.environ.get('prodsf_password')
+    # security_token = os.environ.get('prodsf_security_token')
     username = os.environ.get('username')
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
-    assert(username.startswith('sir'))
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    bulk_load(pp, '../data/dump/Contact.csv', delete=True)
+    bulk_retrieve_metadata(pp, ['Auto_Incarceration_Check__c'],'/tmp')
+
+    # bulk_retrieve_metadata(pp, ['Contact'],'/tmp')
+    # username = os.environ.get('username')
+    # password = os.environ.get('password')
+    # security_token = os.environ.get('security_token')
+    # assert(username.startswith('sir'))
+    # pp = PostPrisonSF(username=username, password=password, security_token=security_token)
+    # bulk_load(pp, '../data/dump/Contact.csv', delete=True)
 

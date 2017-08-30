@@ -90,6 +90,24 @@ class PostPrisonSF(object):
             return records
         return self._get_doc_info(records)
 
+    def update(self,records):
+        '''
+        Update salesforce db with records
+        :param records: 
+        :return: 
+        '''
+        def fix(k):
+            if k == 'Id':
+                return 'Contact__c'
+            if k == 'DOCLocation':
+                return 'DOCLocation__c'
+            return k
+        records = [{fix(k): v for k, v in r.items() if k in ('Id','DOCLocation','DOCAgencyNumType__c')} for r in records]
+
+        #print(records)
+        #self.sf.Auto_Incarceration_Check__c.create(records[0])
+        self.sf.bulk.Auto_Incarceration_Check__c.insert(records)
+
     def _filter(self, records):
         """
         Extra filtering that can't be done with SOQL.
@@ -113,8 +131,10 @@ class PostPrisonSF(object):
         return records
 
 
-    def describe(self):
-        debug(self.sf.Contact.describe())
+    def describe(self,o=None):
+        if o is None:
+            return self.sf.describe()
+        return self.sf[o].describe()
 
     def _get_doc_info(self, sfrecords):
         """
@@ -207,6 +227,6 @@ if __name__ == '__main__':
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
     debug(pp._get_doc_bop()) #work in progress
-    
+
 
 
