@@ -17,6 +17,7 @@ class TestPostPrisonSF(TestCase):
 
         self.pp = PostPrisonSF(username=username, password=password, security_token=security_token)
 
+    @unittest.skip("Skipping testupdate")
     def testupdate(self):
         records = self.pp.query(lastname='Test', limit=1)
         self.assertIsNotNone(records)
@@ -52,7 +53,6 @@ class TestPostPrisonSF(TestCase):
             contact_records = self.pp.sf.query_all(query)
             self.assertEquals(contact_records['records'][0]['DOCLocation__c'],'Fake facility')
 
-    @unittest.skip("Skipping big slow test")
     def testbigupdate(self):
         records = self.pp.query(min_level_of_service=2)
         self.assertIsNotNone(records)
