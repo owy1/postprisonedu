@@ -97,7 +97,7 @@ class PostPrisonSF(object):
         '''
         return self._get_doc_info(records)
 
-    def update(self,records,debug=False):
+    def update(self,records,debug=False,force_records=False):
         '''
         Update salesforce db Auto_Incarceration table with records supplemented with incarceration info
         :param records: 
@@ -109,7 +109,10 @@ class PostPrisonSF(object):
             if k == 'DOCLocation':
                 return 'DOCLocation__c'
             return k
-        nrecords = self._get_incarceration(records)
+        if force_records:
+            nrecords = records
+        else:
+            nrecords = self._get_incarceration(records)
         nrecords = [{fix(k): v for k, v in r.items() if k in ('Id','DOCLocation','DOCAgencyNumType__c')} for r in nrecords]
         ndf = pd.DataFrame(nrecords)
         ndf.loc[ndf.DOCLocation__c.isnull(),'DOCLocation__c'] = ""
@@ -132,7 +135,15 @@ class PostPrisonSF(object):
             if debug:
                 dprint(joined)
             self.sf.bulk.Auto_Incarceration_Check__c.insert(joined)
-            #self.sf.Auto_Incarceration_Check__c.create(joined[0])
+
+            # Update Contacts as well
+            def cfix(k):
+                if k == 'Contact__c':
+                    return 'Id'
+                return k
+            contacts = [{cfix(k):v for k,v in item.items() if k in ('Contact__c','DOCLocation__c')} for item in joined]
+            self.sf.bulk.Contact.update(contacts)
+
 
     def _filter(self, records):
         """

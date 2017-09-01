@@ -1,4 +1,5 @@
 from unittest import TestCase
+import unittest
 import os
 from get_doc import PostPrisonSF,dprint
 from util import bulk_delete
@@ -25,8 +26,6 @@ class TestPostPrisonSF(TestCase):
         sqlquery = 'SELECT Id from Auto_Incarceration_Check__c'
         sqlquery += " where Contact__c='%s'"% records[0]['Id']
         curr_records = self.pp.sf.query_all(sqlquery)
-        #dprint(records)
-        #dprint(curr_records)
         delids = [r['Id'] for r in curr_records['records']]
 
         bulk_delete(self.pp.sf,'Auto_Incarceration_Check__c',ids=delids)
@@ -37,21 +36,24 @@ class TestPostPrisonSF(TestCase):
         for i in range(2):
             self.pp.update(records,debug=False)
             auto_records = self.pp.sf.query_all("SELECT Id from Auto_Incarceration_Check__c where Contact__c='%s'" % records[0]['Id'])
-            #dprint(auto_records)
             self.assertEquals(len(auto_records['records']),1)
-        # self.pp.update(records,debug=True)
 
 
-    def no_testupdate(self):
-        records = self.pp.query(lastname='Orr', limit=1) # Return one record with lastname Orr containing all fields
-        self.assertIsNotNone(records)
-        self.assertEquals(records[0]['FirstName'],'Frederick Del')
-        self.assertEquals(records[0]['CorrectionsAgencyNum__c'],718288)
 
-        #debug(records)
-        self.pp.update(records,debug=True)
+        # Add a new record. Should now be two records
+        records[0]['DOCLocation'] = 'Fake facility'
 
-    def no_testbigupdate(self):
+        for i in range(2):
+            self.pp.update(records, debug=False, force_records=True)
+            auto_records = self.pp.sf.query_all(
+                "SELECT Id from Auto_Incarceration_Check__c where Contact__c='%s'" % records[0]['Id'])
+            self.assertEquals(len(auto_records['records']), 2)
+            query = "SELECT DOCLocation__c from Contact where Id='%s'" % records[0]['Id']
+            contact_records = self.pp.sf.query_all(query)
+            self.assertEquals(contact_records['records'][0]['DOCLocation__c'],'Fake facility')
+
+    @unittest.skip("Skipping big slow test")
+    def testbigupdate(self):
         records = self.pp.query(min_level_of_service=2)
         self.assertIsNotNone(records)
 
