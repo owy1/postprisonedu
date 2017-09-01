@@ -23,5 +23,11 @@ class TestPostPrisonSF(TestCase):
         self.assertEquals(records[0]['CorrectionsAgencyNum__c'],718288)
 
         #debug(records)
+        self.pp.update(records,debug=True)
+
+    def no_testbigupdate(self):
+        records = self.pp.query(min_level_of_service=2)
+        self.assertIsNotNone(records)
+
         self.pp.update(records)
 

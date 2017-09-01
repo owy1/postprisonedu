@@ -97,7 +97,7 @@ class PostPrisonSF(object):
         '''
         return self._get_doc_info(records)
 
-    def update(self,records):
+    def update(self,records,debug=False):
         '''
         Update salesforce db Auto_Incarceration table with records supplemented with incarceration info
         :param records: 
@@ -123,11 +123,14 @@ class PostPrisonSF(object):
             joined = ndf.merge(df,'left',left_on='Contact__c', right_index=True)
             joined = joined[joined.DOCLocation__c_x != joined.DOCLocation__c_y]
             joined = joined[['Contact__c','DOCAgencyNumType__c','DOCLocation__c_x']]
-            joined.rename({'DOCLocation__c_x':'DOCLocation__c'})
+            joined = joined.rename(columns={'DOCLocation__c_x':'DOCLocation__c'})
         else: joined = ndf
         if len(joined) > 0:
             joined = joined.to_dict(orient='records')
+            if debug:
+                debug(joined)
             self.sf.bulk.Auto_Incarceration_Check__c.insert(joined)
+            #self.sf.Auto_Incarceration_Check__c.create(joined[0])
 
     def _filter(self, records):
         """
