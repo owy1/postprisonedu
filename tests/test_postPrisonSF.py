@@ -1,6 +1,7 @@
 from unittest import TestCase
 import os
-from get_doc import PostPrisonSF
+from get_doc import PostPrisonSF,debug
+from util import bulk_delete
 
 
 class TestPostPrisonSF(TestCase):
@@ -16,10 +17,11 @@ class TestPostPrisonSF(TestCase):
         self.pp = PostPrisonSF(username=username, password=password, security_token=security_token)
 
     def testupdate(self):
-        records = self.pp.query(lastname='Orr', limit=10) # Return one record with lastname Jones containing all fields
+        records = self.pp.query(lastname='Orr', limit=1) # Return one record with lastname Orr containing all fields
         self.assertIsNotNone(records)
         self.assertEquals(records[0]['FirstName'],'Frederick Del')
         self.assertEquals(records[0]['CorrectionsAgencyNum__c'],718288)
 
+        #debug(records)
         self.pp.update(records)
 

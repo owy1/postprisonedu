@@ -10,6 +10,8 @@ from simple_salesforce import Salesforce
 import logging as log
 log.basicConfig(level=log.DEBUG)
 from collections import OrderedDict
+import pandas as pd
+pd.options.display.width=256
 
 # DOC Web site
 _BaseUrl = 'http://www.doc.wa.gov/information/inmate-search/default.aspx'
@@ -31,14 +33,13 @@ class PostPrisonSF(object):
                                 'Index_Date_Selfreported__c','LastActivityDate','Last_Index_Date_DOCreported__c','CreatedDate',
                                 'Risk_Level__c','Application_Service_Date__c','Application_ERD__c' )
 
-    def query(self,lastname=None, limit=None, fields=None, update_with_corrections=True, min_level_of_service=1,debug_level=0):
+    def query(self,lastname=None, limit=None, fields=None, min_level_of_service=1,debug_level=0):
         """
         Get contact info from PostPrison db.
 
         :param lastname: Lastname of contact in SF db. If None, all lastnames
         :param limit: Maximum number of objects to return. If None, no limit
         :param fields: Contact fields to return. Use '*' to return all fields
-        :param update_with_corrections: Update records with incarceration info.
         :param min_level_of_service: Minimum PostPrison level of service to include
         :return: List of SF objects matching query
         """
@@ -86,13 +87,19 @@ class PostPrisonSF(object):
 
         log.debug("Unsupported doc types=%s" % unsupportedDocTypes)
         log.info("Fail/good %d/%d" % (bad, len(records)))
-        if not update_with_corrections:
-            return records
+        return records
+
+    def _get_incarceration(self, records):
+        '''
+        Update contact info with incarceration info from DOC or FOB database
+        :param records: Records suitable for inserted in Auto_Incarceration table
+        :return: Updated records
+        '''
         return self._get_doc_info(records)
 
     def update(self,records):
         '''
-        Update salesforce db with records
+        Update salesforce db Auto_Incarceration table with records supplemented with incarceration info
         :param records: 
         :return: 
         '''
@@ -102,11 +109,25 @@ class PostPrisonSF(object):
             if k == 'DOCLocation':
                 return 'DOCLocation__c'
             return k
-        records = [{fix(k): v for k, v in r.items() if k in ('Id','DOCLocation','DOCAgencyNumType__c')} for r in records]
+        nrecords = self._get_incarceration(records)
+        nrecords = [{fix(k): v for k, v in r.items() if k in ('Id','DOCLocation','DOCAgencyNumType__c')} for r in nrecords]
+        ndf = pd.DataFrame(nrecords)
 
-        #print(records)
-        #self.sf.Auto_Incarceration_Check__c.create(records[0])
-        self.sf.bulk.Auto_Incarceration_Check__c.insert(records)
+        # Only update changed records
+        # SOQL aggregation funtions very limiting, so use Pandas instead to get last modified record
+        curr_records = self.sf.query_all('SELECT Contact__c,DOCLocation__c,LastModifiedDate from Auto_Incarceration_Check__c')
+        df = pd.DataFrame(curr_records['records'])
+        if len(df) > 0:
+            del df['attributes']
+            df = df.sort_values('LastModifiedDate').groupby('Contact__c').last()
+            joined = ndf.merge(df,'left',left_on='Contact__c', right_index=True)
+            joined = joined[joined.DOCLocation__c_x != joined.DOCLocation__c_y]
+            joined = joined[['Contact__c','DOCAgencyNumType__c','DOCLocation__c_x']]
+            joined.rename({'DOCLocation__c_x':'DOCLocation__c'})
+        else: joined = ndf
+        if len(joined) > 0:
+            joined = joined.to_dict(orient='records')
+            self.sf.bulk.Auto_Incarceration_Check__c.insert(joined)
 
     def _filter(self, records):
         """

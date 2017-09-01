@@ -18,10 +18,7 @@ def bulk_load_contact(pp, csv_file,delete=False):
     df = df[fields]
 
     if delete:
-        sqlquery = "Select Id from Contact"
-        records = sf.query_all(sqlquery)['records']
-        delids = [{'Id':r['Id']} for r in records]
-        if len(delids) > 0: sf.bulk.Contact.delete(delids)
+        bulk_delete(sf,'Contact')
 
     for b in bad:
         del df[b]
@@ -50,6 +47,14 @@ def bulk_load_contact(pp, csv_file,delete=False):
                 print("Continuing...")
             bulk = []
     if len(bulk) > 0: pp.sf.bulk.Contact.insert(bulk)
+
+
+def bulk_delete(sf,table):
+    sqlquery = "Select Id from %s" % table
+    records = sf.query_all(sqlquery)['records']
+    delids = [{'Id': r['Id']} for r in records]
+    if len(delids) > 0: sf.bulk[table].delete(delids)
+
 
 def bulk_retrieve_metadata(pp,objects,output_dir):
     for o in objects:
