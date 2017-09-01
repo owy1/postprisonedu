@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from get_doc import PostPrisonSF,debug
+from get_doc import PostPrisonSF,dprint
 
 def bulk_load_contact(pp, csv_file,delete=False):
     dates = ["Index_Date_Selfreported__c","Last_Index_Date_DOCreported__c",'Application_ERD__c', 'Birthdate','SystemModstamp','CreatedDate', 'LastModifiedDate', 'LastActivityDate', 'LastCURequestDate', 'LastCUUpdateDate', 'EmailBouncedDate', 'npo02__FirstCloseDate__c', 'npo02__LastCloseDate__c', 'npo02__LastMembershipDate__c', 'npo02__MembershipEndDate__c', 'npo02__MembershipJoinDate__c', 'Index_Date_Selfreported__c', 'REMOVE_Recidivism_Date__c', 'Last_Index_Date_DOCreported__c', 'Application_Service_Date__c', 'Adjusted_S_Code_Date__c', 'Adjusted_Risk_Level_Date__c']
@@ -49,16 +49,20 @@ def bulk_load_contact(pp, csv_file,delete=False):
     if len(bulk) > 0: pp.sf.bulk.Contact.insert(bulk)
 
 
-def bulk_delete(sf,table):
+def bulk_delete(sf,table,ids=None):
     sqlquery = "Select Id from %s" % table
-    records = sf.query_all(sqlquery)['records']
-    delids = [{'Id': r['Id']} for r in records]
+    if ids is None:
+        sqlquery += " where id=%s" % id
+        records = sf.query_all(sqlquery)['records']
+        delids = [{'Id': r['Id']} for r in records]
+    else:
+        delids = [{'Id':id} for id in ids]
     if len(delids) > 0: sf.bulk[table].delete(delids)
 
 
 def bulk_retrieve_metadata(pp,objects,output_dir):
     for o in objects:
-        debug(pp.describe(o))
+        dprint(pp.describe(o))
 
 
 if __name__ == '__main__':

@@ -128,7 +128,7 @@ class PostPrisonSF(object):
         if len(joined) > 0:
             joined = joined.to_dict(orient='records')
             if debug:
-                debug(joined)
+                dprint(joined)
             self.sf.bulk.Auto_Incarceration_Check__c.insert(joined)
             #self.sf.Auto_Incarceration_Check__c.create(joined[0])
 
@@ -227,7 +227,7 @@ class PostPrisonSF(object):
         return info
 
 
-def debug(ob, indent=4, sort=True, remove_null=False):
+def dprint(ob, indent=4, sort=True, remove_null=False):
     """
     Pretty print SalesForce objects.
 
@@ -250,7 +250,7 @@ if __name__ == '__main__':
     password = os.environ.get('password')
     security_token = os.environ.get('security_token')
     pp = PostPrisonSF(username=username, password=password, security_token=security_token)
-    debug(pp._get_doc_bop()) #work in progress
+    dprint(pp._get_doc_bop()) #work in progress
 
 
 
