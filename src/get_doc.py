@@ -112,11 +112,13 @@ class PostPrisonSF(object):
         nrecords = self._get_incarceration(records)
         nrecords = [{fix(k): v for k, v in r.items() if k in ('Id','DOCLocation','DOCAgencyNumType__c')} for r in nrecords]
         ndf = pd.DataFrame(nrecords)
+        ndf.loc[ndf.DOCLocation__c.isnull(),'DOCLocation__c'] = ""
 
         # Only update changed records
         # SOQL aggregation funtions very limiting, so use Pandas instead to get last modified record
         curr_records = self.sf.query_all('SELECT Contact__c,DOCLocation__c,LastModifiedDate from Auto_Incarceration_Check__c')
         df = pd.DataFrame(curr_records['records'])
+        df.loc[df.DOCLocation__c.isnull(),'DOCLocation__c'] = ""
         if len(df) > 0:
             del df['attributes']
             df = df.sort_values('LastModifiedDate').groupby('Contact__c').last()

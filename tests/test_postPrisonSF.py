@@ -25,8 +25,8 @@ class TestPostPrisonSF(TestCase):
         sqlquery = 'SELECT Id from Auto_Incarceration_Check__c'
         sqlquery += " where Contact__c='%s'"% records[0]['Id']
         curr_records = self.pp.sf.query_all(sqlquery)
-        dprint(records)
-        dprint(curr_records)
+        #dprint(records)
+        #dprint(curr_records)
         delids = [r['Id'] for r in curr_records['records']]
 
         bulk_delete(self.pp.sf,'Auto_Incarceration_Check__c',ids=delids)
@@ -35,9 +35,9 @@ class TestPostPrisonSF(TestCase):
         # both times
         #
         for i in range(2):
-            self.pp.update(records,debug=True)
+            self.pp.update(records,debug=False)
             auto_records = self.pp.sf.query_all("SELECT Id from Auto_Incarceration_Check__c where Contact__c='%s'" % records[0]['Id'])
-            dprint(auto_records)
+            #dprint(auto_records)
             self.assertEquals(len(auto_records['records']),1)
         # self.pp.update(records,debug=True)
 
